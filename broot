@@ -1,0 +1,69 @@
+#!/bin/ksh
+#
+# SCRIPT: broot
+# AUTHOR: Zainer Araujo
+# DATE: 05/08/2025
+# REV: 1.1 - Corrigido e funcional
+# PLATFORM: Any Unix
+#
+# PURPOSE: Monitorar toda a sessão root, salvando logs de terminal
+#          e enviando para um administrador.
+#
+# USAGE: sudo broot
+
+#########################
+# CONFIGURAÇÕES
+#########################
+LOG_MANAGER="logman"                # Usuário ou e-mail para receber logs
+LOGDIR="/usr/local/logs/script"     # Diretório para armazenar logs
+mkdir -p "$LOGDIR"
+
+TS=$(date +%m%d%y%H%M%S)            # Timestamp
+THISHOST=$(hostname)                 # Hostname do servidor
+LOGFILE="${THISHOST}.${LOGNAME}.${TS}" # Nome do arquivo de log
+
+touch "$LOGDIR/$LOGFILE"
+chmod 600 "$LOGDIR/$LOGFILE"
+
+TMOUT=300                            # Timeout do shell root
+export TMOUT
+
+set -o vi                            # Histórico de comandos
+stty erase ^?                        # Backspace padrão
+
+# Executa .profile do root se existir
+if [[ -f $HOME/.profile ]]; then
+    . "$HOME/.profile"
+fi
+
+# Ajusta PATH
+echo "$PATH" | grep -q ':/usr/local/bin' || PATH="$PATH:/usr/local/bin"
+export PATH
+
+# Define prompt
+PS1="$THISHOST:broot> "
+export PS1
+
+#########################
+# FUNÇÕES
+#########################
+cleanup_exit() {
+    # Envia log por e-mail e comprime
+    if [[ -s "${LOGDIR}/${LOGFILE}" ]]; then
+        mailx -s "$TS - $LOGNAME Audit Report" "$LOG_MANAGER" < "${LOGDIR}/${LOGFILE}"
+        gzip -f "${LOGDIR}/${LOGFILE}" 2>/dev/null
+    fi
+    exit
+}
+
+# Configura trap para sinais comuns
+trap cleanup_exit 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 26
+
+#########################
+# EXECUÇÃO PRINCIPAL
+#########################
+chmod 600 "${LOGDIR}/${LOGFILE}"    # Permissão RW para owner
+script -q "${LOGDIR}/${LOGFILE}"    # Inicia captura da sessão (modo silencioso)
+chmod 400 "${LOGDIR}/${LOGFILE}"    # Permissão somente leitura para owner
+
+cleanup_exit                        # Garante cleanup e envio do log
