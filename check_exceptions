@@ -1,0 +1,33 @@
+check_exceptions() {
+    # set -x   # Descomente para depurar esta função
+
+    while read FSNAME FSLIMIT
+    do
+        # Sanity check para NFS (host:/mount → /mount)
+        if echo "$FSNAME" | grep ":" >/dev/null
+        then
+            FSNAME=${FSNAME#*:}
+        fi
+
+        # Garantir que FSLIMIT não é nulo
+        if [ -n "$FSLIMIT" ]
+        then
+            # Converter MB para KB
+            FSLIMIT=${FSLIMIT%MB}
+            typeset -i FSLIMIT
+            (( FSLIMIT = FSLIMIT * 1024 ))
+
+            if [[ "$FSNAME" = "$FSMOUNT" ]]
+            then
+                if (( FSMB_FREE < FSLIMIT ))
+                then
+                    return 1   # Encontrado e fora do limite
+                else
+                    return 2   # Encontrado e dentro do limite
+                fi
+            fi
+        fi
+    done < "$DATA_EXCEPTIONS"
+
+    return 3   # Não encontrado no arquivo de exceções
+}
