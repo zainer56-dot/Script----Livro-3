@@ -1,0 +1,43 @@
+function list_of_disks
+{
+    echo "\n${STATE} luzes individuais de discos SSA...\n"
+
+    for DISK in $PDISKLIST
+    do
+        # Verificar se é um device válido
+        if [ ! -c "/dev/${DISK}" ]
+        then
+            echo "\nERROR: ${DISK} não é um device definido em ${THIS_HOST}\n"
+            continue
+        fi
+
+        # Se for hdisk, traduzir para pdisk(s)
+        if echo "$DISK" | grep '^hdisk' >/dev/null
+        then
+            PDISKS=$(/usr/sbin/ssaxlate -l "$DISK" 2>/dev/null)
+            if [[ -z "$PDISKS" ]]
+            then
+                echo "Falha ao traduzir $DISK para pdisk"
+                continue
+            fi
+        else
+            # Já é pdisk
+            PDISKS="$DISK"
+        fi
+
+        # Atuar em cada pdisk resultante
+        for PDISK in $PDISKS
+        do
+            echo "${STATE} ==> $PDISK"
+
+            if /usr/sbin/ssaidentify -l "$PDISK" -"${SWITCH}" >/dev/null 2>&1
+            then
+                echo "Light on $PDISK is ${STATE}"
+            else
+                echo "Turning ${STATE} $PDISK FAILED"
+            fi
+        done
+    done
+
+    echo "\n...FINALIZADO...\n"
+}
