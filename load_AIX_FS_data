@@ -1,0 +1,44 @@
+####################################
+# AIX
+####################################
+function load_AIX_FS_data
+{
+    df -k | tail +2 | egrep -v '/dev/cd[0-9]|/proc' \
+    | awk '{print $1, $2, $3, $4, $7}' > "$WORKFILE"
+}
+
+####################################
+# HP-UX
+####################################
+function load_HP_UX_FS_data
+{
+    bdf | tail +2 | egrep -v '/mnt/cdrom' \
+    | awk '{print $1, $2, $4, $5, $6}' > "$WORKFILE"
+}
+
+####################################
+# Linux
+####################################
+function load_LINUX_FS_data
+{
+    df -k | tail +2 | egrep -v '/mnt/cdrom' \
+    | awk '{print $1, $2, $4, $5, $6}' > "$WORKFILE"
+}
+
+####################################
+# OpenBSD
+####################################
+function load_OpenBSD_FS_data
+{
+    df -k | tail +2 | egrep -v '/mnt/cdrom' \
+    | awk '{print $1, $2, $4, $5, $6}' > "$WORKFILE"
+}
+
+####################################
+# Solaris
+####################################
+function load_Solaris_FS_data
+{
+    df -k | tail +2 | egrep -v '/dev/fd|/etc/mnttab|/proc' \
+    | awk '{print $1, $2, $4, $5, $6}' > "$WORKFILE"
+}
