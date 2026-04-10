@@ -1,0 +1,4 @@
+function load_EXCEPTIONS_file() {
+    # Ignorar linhas comentadas (#) e linhas em branco
+    grep -Ev '^\s*#|^\s*$' "$EXCEPTIONS" > "$DATA_EXCEPTIONS"
+}
