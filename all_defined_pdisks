@@ -1,0 +1,18 @@
+function all_defined_pdisks
+{
+    echo "\n${STATE} TODAS as luzes dos pdisks do sistema... Aguarde...\n"
+
+    lsdev -C -c pdisk -s ssar -H | awk '{print $1}' | while read PDISK
+    do
+        [[ -z "$PDISK" ]] && continue
+
+        echo "${STATE} ==> $PDISK"
+
+        if ! ssaidentify -l "$PDISK" -"${SWITCH}"
+        then
+            echo "${STATE} $PDISK Falhou"
+        fi
+    done
+
+    echo "\n...FINALIZADO...\n"
+}
