@@ -1,0 +1,50 @@
+function all_varied_on_pdisks
+{
+    trap 'kill $TWIRL_PID 2>/dev/null; return 1' 1 2 3 15
+
+    : > "$HDISKFILE"
+    : > "$PDISKFILE"
+
+    echo "\nColetando a lista de discos SSA do sistema que estão VARIED ON... Aguarde...\c"
+
+    VG_LIST=$(lsvg -o)
+
+    for VG in $VG_LIST
+    do
+        lspv | grep " $VG$" | awk '{print $1}' >> "$HDISKFILE"
+    done
+
+    twirl &
+    TWIRL_PID=$!
+
+    echo "\nTraduzindo hdisk(s) para os pdisk(s) associados... Aguarde...\c"
+
+    while read DISK
+    do
+        [[ -z "$DISK" ]] && continue
+
+        if /usr/sbin/ssaxlate -l "$DISK" >/dev/null 2>&1
+        then
+            /usr/sbin/ssaxlate -l "$DISK" >> "$PDISKFILE"
+        fi
+    done < "$HDISKFILE"
+
+    kill $TWIRL_PID 2>/dev/null
+    echo "\b "
+
+    echo "\n${STATE} TODOS os pdisks do sistema que estão VARIED ON... Aguarde...\n"
+
+    while read PDISK
+    do
+        [[ -z "$PDISK" ]] && continue
+
+        echo "${STATE} ==> $PDISK"
+
+        if ! /usr/sbin/ssaidentify -l "$PDISK" -"${SWITCH}"
+        then
+            echo "${STATE} $PDISK Falhou"
+        fi
+    done < "$PDISKFILE"
+
+    echo "\n\t...FINALIZADO...\n"
+}
