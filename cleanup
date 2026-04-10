@@ -1,0 +1,10 @@
+function cleanup
+{
+    echo "\n...Saindo devido a um sinal capturado... EXITING STAGE LEFT...\n"
+
+    if [[ -n "$TWIRL_PID" ]]
+    then
+        kill $TWIRL_PID 2>/dev/null
+        wait $TWIRL_PID 2>/dev/null
+    fi
+}
