@@ -1,0 +1,60 @@
+#!/bin/ksh
+#
+# SCRIPT: boracle
+# AUTHOR: Zainer Araujo
+# DATE: 05/08/2025
+# REV: 1.1 - Corrigido e funcional
+# PLATFORM: Any Unix
+#
+# PURPOSE: Captura todo o acesso de $EFF_USER via script e envia log para auditor.
+
+################# CONFIGURAÇÃO ##################
+EFF_USER=oracle
+LOG_SERVER=unixbr2000
+LOG_MANAGER="logman@$LOG_SERVER"
+LOGDIR="/usr/local/logs/script"
+mkdir -p "$LOGDIR"
+
+TS=$(date +%m%d%y%H%M%S)
+THISHOST=$(hostname)
+LOGFILE="${THISHOST}.${EFF_USER}.${TS}"
+
+touch "$LOGDIR/$LOGFILE"
+chmod 600 "$LOGDIR/$LOGFILE"
+
+TMOUT=300
+export TMOUT
+
+set -o vi
+stty erase ^?
+
+# Ajusta PATH
+echo "$PATH" | grep -q ':/usr/local/bin' || PATH="$PATH:/usr/local/bin"
+export PATH
+
+# Prompt customizado
+PS1="$THISHOST:b${EFF_USER}> "
+export PS1
+
+################# FUNÇÕES ######################
+cleanup_exit() {
+    # Se o log tiver conteúdo, envia por email e compacta
+    if [[ -s "${LOGDIR}/${LOGFILE}" ]]; then
+        mailx -s "$TS - $EFF_USER Audit Report" "$LOG_MANAGER" < "${LOGDIR}/${LOGFILE}"
+        gzip -f "${LOGDIR}/${LOGFILE}" 2>/dev/null
+    fi
+    exit
+}
+
+################# TRAP ##########################
+trap 'cleanup_exit' 1 2 3 5 15
+
+################# EXECUÇÃO #####################
+# Executa o script como EFF_USER
+sudo su - "$EFF_USER" -c "script -q ${LOGDIR}/${LOGFILE}"
+
+# Ajusta permissão para leitura apenas
+chmod 400 "${LOGDIR}/${LOGFILE}"
+
+# Executa cleanup e envio do log
+cleanup_exit
