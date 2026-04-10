@@ -1,0 +1,42 @@
+function usage
+{
+    cat <<EOF
+
+ERRO DE USO...
+
+MAN PAGE ==> $SCRIPTNAME -?
+
+--------------------------------------------------
+Para LIGAR ou DESLIGAR TODAS as luzes:
+--------------------------------------------------
+USO: $SCRIPTNAME [-v] on | off
+
+EXEMPLO:
+  $SCRIPTNAME -v on
+
+Irá LIGAR TODAS as luzes de identificação SSA
+atualmente VARIED ON do sistema.
+
+NOTA: O padrão é atuar sobre todos os discos SSA DEFINIDOS.
+
+--------------------------------------------------
+Para LIGAR ou DESLIGAR LUZES ESPECÍFICAS usando
+pdisk(s) e/ou hdisk(s):
+--------------------------------------------------
+USO:
+  $SCRIPTNAME on | off pdisk# [hdisk#] ...
+
+EXEMPLO:
+  $SCRIPTNAME on hdisk36 pdisk44 pdisk47
+
+Irá LIGAR as luzes de todos os pdisk(s) associados
+ao hdisk36 e também dos pdisks pdisk44 e pdisk47.
+
+NOTA:
+- Pode usar apenas pdisks
+- Apenas hdisks
+- Ou AMBOS juntos, se desejar
+
+EOF
+    exit 1
+}
